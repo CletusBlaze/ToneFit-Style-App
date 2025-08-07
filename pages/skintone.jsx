@@ -105,8 +105,14 @@ export default function SkinTone() {
                   </label>
                   {aiResult && (
                     <div className="mt-4 p-4 bg-green-50 dark:bg-green-900 rounded-lg">
-                      <p className="text-green-800 dark:text-green-200 font-medium">
+                      <p className="text-green-800 dark:text-green-200 font-medium mb-2">
                         ✨ AI detected: {aiResult.name} ({Math.round(aiResult.confidence * 100)}% confidence)
+                      </p>
+                      <p className="text-green-700 dark:text-green-300 text-sm mb-2">
+                        {aiResult.description}
+                      </p>
+                      <p className="text-green-700 dark:text-green-300 text-sm">
+                        Season: {aiResult.season}
                       </p>
                     </div>
                   )}

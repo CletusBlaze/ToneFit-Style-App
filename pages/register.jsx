@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Navbar from '../src/components/Navbar'
+import { registerUser, validateEmail, validatePassword } from '../src/utils/auth'
 
 export default function Register() {
   const router = useRouter()
@@ -12,27 +13,42 @@ export default function Register() {
     confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    setMessage('')
+    
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    if (!validatePassword(formData.password)) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
     
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
+      setError('Passwords do not match')
       return
     }
     
     setIsLoading(true)
     
-    // Simulate registration
-    setTimeout(() => {
-      localStorage.setItem('userAuth', JSON.stringify({
-        name: formData.name,
-        email: formData.email,
-        registrationTime: new Date().toISOString()
-      }))
+    try {
+      const result = await registerUser(formData)
+      setMessage(result.message)
+      setTimeout(() => {
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+      }, 2000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
       setIsLoading(false)
-      router.push('/welcome')
-    }, 1500)
+    }
   }
 
   return (
@@ -48,6 +64,18 @@ export default function Register() {
               Join ToneFitStyle and discover your perfect style
             </p>
           </div>
+          
+          {message && (
+            <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-md p-4">
+              <p className="text-green-800 dark:text-green-200 text-sm">{message}</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-4">
+              <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+            </div>
+          )}
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">

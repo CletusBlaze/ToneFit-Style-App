@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import Navbar from '../src/components/Navbar'
+import { useStore } from '../src/store/useStore'
 
 export default function UploadClothes() {
+  const { addWardrobeItem } = useStore()
   const [uploadedItems, setUploadedItems] = useState([])
   const [dragActive, setDragActive] = useState(false)
 
@@ -52,6 +54,38 @@ export default function UploadClothes() {
     )
   }
 
+  const generateOutfitCombinations = (items) => {
+    const categorizedItems = items.filter(item => item.category !== 'Uncategorized')
+    const tops = categorizedItems.filter(item => item.category === 'Tops')
+    const bottoms = categorizedItems.filter(item => item.category === 'Bottoms')
+    const dresses = categorizedItems.filter(item => item.category === 'Dresses')
+    const accessories = categorizedItems.filter(item => item.category === 'Accessories')
+    
+    const combinations = []
+    
+    // Top + Bottom combinations
+    tops.forEach(top => {
+      bottoms.forEach(bottom => {
+        const combo = { id: Date.now() + Math.random(), top, bottom }
+        if (accessories.length > 0) {
+          combo.accessory = accessories[Math.floor(Math.random() * accessories.length)]
+        }
+        combinations.push(combo)
+      })
+    })
+    
+    // Dress combinations
+    dresses.forEach(dress => {
+      const combo = { id: Date.now() + Math.random(), dress }
+      if (accessories.length > 0) {
+        combo.accessory = accessories[Math.floor(Math.random() * accessories.length)]
+      }
+      combinations.push(combo)
+    })
+    
+    return combinations.slice(0, 10) // Limit to 10 combinations
+  }
+
   return (
     <div>
       <Navbar />
@@ -97,11 +131,14 @@ export default function UploadClothes() {
               <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {uploadedItems.map((item) => (
                   <div key={item.id} className="border rounded-lg p-3">
-                    <img 
-                      src={item.src} 
-                      alt={item.name}
-                      className="w-full h-32 object-cover rounded mb-2"
-                    />
+                    <div className="relative bg-gray-100 dark:bg-gray-800 rounded mb-2 overflow-hidden">
+                      <img 
+                        src={item.src} 
+                        alt={item.name}
+                        className="w-full h-auto max-h-32 object-contain rounded"
+                        style={{ aspectRatio: 'auto' }}
+                      />
+                    </div>
                     <p className="text-sm font-medium truncate">{item.name}</p>
                     <select
                       value={item.category}
@@ -121,10 +158,23 @@ export default function UploadClothes() {
               </div>
               
               <div className="mt-6 text-center">
-                <button className="btn-primary mr-4">
+                <button 
+                  onClick={() => {
+                    const combinations = generateOutfitCombinations(uploadedItems)
+                    alert(`Generated ${combinations.length} outfit combinations! Check your wardrobe page to view them.`)
+                  }}
+                  className="btn-primary mr-4"
+                >
                   Generate Outfit Combinations
                 </button>
-                <button className="btn-secondary">
+                <button 
+                  onClick={() => {
+                    uploadedItems.forEach(item => addWardrobeItem(item))
+                    alert(`Saved ${uploadedItems.length} items to your wardrobe!`)
+                    setUploadedItems([])
+                  }}
+                  className="btn-secondary"
+                >
                   Save Wardrobe
                 </button>
               </div>

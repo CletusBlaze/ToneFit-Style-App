@@ -8,7 +8,7 @@ const mockProducts = [
     name: 'Wrap Blouse',
     brand: 'Zara',
     price: '$49.99',
-    image: '/products/wrap-blouse.jpg',
+    image: '/Wrap Blouse.jfif',
     affiliate: 'https://zara.com/wrap-blouse',
     category: 'Tops',
     colors: ['White', 'Black', 'Navy'],
@@ -19,7 +19,7 @@ const mockProducts = [
     name: 'High-Waisted Jeans',
     brand: 'H&M',
     price: '$39.99',
-    image: '/products/jeans.jpg',
+    image: '/High-Waisted Jeans.jfif',
     affiliate: 'https://hm.com/high-waisted-jeans',
     category: 'Bottoms',
     colors: ['Blue', 'Black', 'White'],
@@ -30,7 +30,7 @@ const mockProducts = [
     name: 'Statement Necklace',
     brand: 'Accessorize',
     price: '$24.99',
-    image: '/products/necklace.jpg',
+    image: '/Statement Necklace.jfif',
     affiliate: 'https://accessorize.com/statement-necklace',
     category: 'Accessories',
     colors: ['Gold', 'Silver', 'Rose Gold'],
@@ -133,8 +133,12 @@ export default function Shopping() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <div key={product.id} className="card hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div className="bg-gray-200 dark:bg-gray-700 h-48 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-6xl">👗</span>
+                <div className="relative bg-gray-100 dark:bg-gray-800 h-48 rounded-lg mb-4 overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
                 
                 <h3 className="text-lg font-semibold mb-2">{product.name}</h3>

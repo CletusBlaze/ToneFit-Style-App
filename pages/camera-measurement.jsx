@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import Navbar from '../src/components/Navbar'
 import { useStore } from '../src/store/useStore'
 import { calculateBodyShape, getShapeAdvice } from '../src/utils/bodyShape'
+import { initializeCamera, capturePhoto, measureBodyFromPhoto } from '../src/utils/cameraCapture'
+import { useTouchGestures } from '../src/utils/touchGestures'
 
 export default function CameraMeasurement() {
   const router = useRouter()
@@ -13,17 +15,16 @@ export default function CameraMeasurement() {
   const [result, setResult] = useState(null)
 
   const startCamera = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-    videoRef.current.srcObject = stream
+    try {
+      await initializeCamera(videoRef.current)
+    } catch (error) {
+      console.error('Camera access failed:', error)
+    }
   }
 
-  const capturePhoto = () => {
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-    canvas.width = videoRef.current.videoWidth
-    canvas.height = videoRef.current.videoHeight
-    context.drawImage(videoRef.current, 0, 0)
-    setCapturedImage(canvas.toDataURL())
+  const handleCapture = () => {
+    const imageData = capturePhoto(videoRef.current)
+    setCapturedImage(imageData)
   }
 
   const analyzeImage = async () => {
@@ -57,10 +58,19 @@ export default function CameraMeasurement() {
           <div className="card text-center">
             {!capturedImage ? (
               <div>
-                <video ref={videoRef} autoPlay className="w-full mb-4 rounded-lg"></video>
+                <div className="relative">
+                  <video ref={videoRef} autoPlay playsInline className="w-full mb-4 rounded-lg"></video>
+                  <div 
+                    className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center cursor-pointer md:hidden"
+                    onClick={handleCapture}
+                    ref={el => el && useTouchGestures(el, { onTap: handleCapture })}
+                  >
+                    <div className="w-12 h-12 bg-white rounded-full"></div>
+                  </div>
+                </div>
                 <div className="space-x-4">
                   <button onClick={startCamera} className="btn-primary">Start Camera</button>
-                  <button onClick={capturePhoto} className="btn-secondary">Capture</button>
+                  <button onClick={handleCapture} className="btn-secondary hidden md:inline-block">Capture</button>
                 </div>
               </div>
             ) : analyzing ? (

@@ -1,29 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Navbar from '../src/components/Navbar'
+import { loginUser, validateEmail } from '../src/utils/auth'
+import { useStore } from '../src/store/useStore'
 
 export default function Login() {
   const router = useRouter()
+  const { setAuth, setAuthLoading, auth } = useStore()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [auth.isAuthenticated, router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setIsLoading(true)
+    setError('')
     
-    // Simulate authentication
-    setTimeout(() => {
-      localStorage.setItem('userAuth', JSON.stringify({
-        email: formData.email,
-        loginTime: new Date().toISOString()
-      }))
-      setIsLoading(false)
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    setAuthLoading(true)
+    
+    try {
+      const session = await loginUser(formData)
+      setAuth({
+        user: session.user,
+        isAuthenticated: true,
+        isLoading: false,
+        token: session.token
+      })
       router.push('/dashboard')
-    }, 1500)
+    } catch (err) {
+      setError(err.message)
+      setAuthLoading(false)
+    }
   }
 
   return (
@@ -39,6 +59,12 @@ export default function Login() {
               Sign in to your ToneFitStyle account
             </p>
           </div>
+          
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-4">
+              <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+            </div>
+          )}
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
@@ -89,19 +115,19 @@ export default function Login() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
+                <Link href="/forgot-password" className="font-medium text-purple-600 hover:text-purple-500">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={auth.isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {auth.isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </div>
 

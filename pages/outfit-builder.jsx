@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Navbar from '../src/components/Navbar'
 import { useStore } from '../src/store/useStore'
 import { generateOutfitRecommendations } from '../src/utils/outfitEngine'
+import { shareToSocialMedia, generateShareableContent } from '../src/utils/socialSharing'
 
 // Static outfit images for preview
 const outfitImages = {
@@ -142,15 +143,28 @@ export default function OutfitBuilder() {
                     </div>
                   </div>
                   
-                  <div className="mt-6 text-center">
+                  <div className="mt-6 flex gap-4 justify-center">
                     <button 
                       onClick={() => {
                         saveOutfit(suggestions[selectedOutfit])
                         alert('Outfit saved to your profile! ✨')
                       }}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-xl transition-all transform hover:scale-105"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all"
                     >
-                      Save This Outfit ❤️
+                      Save Outfit ❤️
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const shareContent = generateShareableContent({
+                          image: '/outfit-preview.jpg',
+                          description: `Check out this ${selectedOccasion} outfit perfect for ${user.bodyShape?.type} body shape!`,
+                          occasion: selectedOccasion
+                        }, user)
+                        shareToSocialMedia('instagram', shareContent)
+                      }}
+                      className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all"
+                    >
+                      Share 📤
                     </button>
                   </div>
                 </div>

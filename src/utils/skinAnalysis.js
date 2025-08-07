@@ -1,54 +1,75 @@
-// AI skin tone detection simulation
+import { detectSkinTone } from './imageProcessing'
+
+// Enhanced skin tone analysis using real image processing
 export const analyzeSkinTone = async (imageData) => {
-  // Simulate AI processing
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  await new Promise(resolve => setTimeout(resolve, 1500))
   
-  // Simulate color analysis
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
   const img = new Image()
   
   return new Promise((resolve) => {
     img.onload = () => {
-      canvas.width = img.width
-      canvas.height = img.height
-      ctx.drawImage(img, 0, 0)
-      
-      // Sample pixels from face area (center region)
-      const centerX = img.width / 2
-      const centerY = img.height / 2
-      const sampleSize = 50
-      
-      let totalR = 0, totalG = 0, totalB = 0, pixelCount = 0
-      
-      for (let x = centerX - sampleSize; x < centerX + sampleSize; x++) {
-        for (let y = centerY - sampleSize; y < centerY + sampleSize; y++) {
-          const pixel = ctx.getImageData(x, y, 1, 1).data
-          totalR += pixel[0]
-          totalG += pixel[1]
-          totalB += pixel[2]
-          pixelCount++
-        }
-      }
-      
-      const avgR = totalR / pixelCount
-      const avgG = totalG / pixelCount
-      const avgB = totalB / pixelCount
-      
-      // Determine undertone based on RGB values
-      const undertone = determineUndertone(avgR, avgG, avgB)
-      const skinTone = classifySkinTone(avgR, avgG, avgB, undertone)
+      const result = detectSkinTone(img)
+      const analysis = getDetailedAnalysis(result)
       
       resolve({
-        name: skinTone.name,
-        type: undertone,
-        hex: skinTone.hex,
-        confidence: Math.random() * 0.3 + 0.7 // 70-100% confidence
+        name: analysis.name,
+        type: result.undertone,
+        hex: result.hex,
+        confidence: result.confidence,
+        season: analysis.season,
+        bestColors: analysis.bestColors,
+        avoidColors: analysis.avoidColors,
+        description: analysis.description
       })
     }
     
     img.src = imageData
   })
+}
+
+const getDetailedAnalysis = (result) => {
+  const { undertone, confidence, hsl } = result
+  
+  const analysis = {
+    warm: {
+      name: hsl?.l > 60 ? 'Light Warm' : 'Deep Warm',
+      description: 'You have warm undertones with golden, peachy, or yellow hues',
+      bestColors: ['coral', 'warm red', 'golden yellow', 'olive green', 'warm brown'],
+      avoidColors: ['cool blue', 'silver', 'cool pink', 'pure white']
+    },
+    cool: {
+      name: hsl?.l > 60 ? 'Light Cool' : 'Deep Cool',
+      description: 'You have cool undertones with pink, red, or blue hues',
+      bestColors: ['cool blue', 'emerald green', 'cool pink', 'purple', 'true red'],
+      avoidColors: ['orange', 'golden yellow', 'warm brown', 'peach']
+    },
+    neutral: {
+      name: hsl?.l > 60 ? 'Light Neutral' : 'Medium Neutral',
+      description: 'You have balanced undertones that work with both warm and cool colors',
+      bestColors: ['navy', 'soft pink', 'sage green', 'cream', 'burgundy'],
+      avoidColors: ['very bright colors', 'neon shades']
+    }
+  }
+  
+  const baseAnalysis = analysis[undertone] || analysis.neutral
+  
+  return {
+    ...baseAnalysis,
+    season: getColorSeason(undertone, hsl)
+  }
+}
+
+const getColorSeason = (undertone, hsl) => {
+  if (!hsl) return 'Unknown'
+  
+  const { l } = hsl
+  
+  if (undertone === 'warm') {
+    return l > 60 ? 'Spring' : 'Autumn'
+  } else if (undertone === 'cool') {
+    return l > 60 ? 'Summer' : 'Winter'
+  }
+  return 'Neutral'
 }
 
 const determineUndertone = (r, g, b) => {

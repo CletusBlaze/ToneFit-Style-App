@@ -1,18 +1,25 @@
-// AI Style Coach with contextual recommendations
+import { mlEngine } from './mlRecommendations'
+
+// Enhanced AI Style Coach with ML recommendations
 export const getAIStyleAdvice = (query, userProfile) => {
   const { bodyShape, skinTone, personality, savedOutfits } = userProfile
   
   // Parse query intent
   const intent = parseIntent(query.toLowerCase())
   
+  // Generate ML-powered recommendations
+  const context = extractContext(query, intent)
+  const mlRecommendations = mlEngine.generateRecommendations(userProfile, context)
+  
   // Generate contextual response
-  const response = generateResponse(intent, query, userProfile)
+  const response = generateResponse(intent, query, userProfile, mlRecommendations)
   
   return {
     message: response.message,
     suggestions: response.suggestions,
     confidence: response.confidence,
-    followUp: response.followUp
+    followUp: response.followUp,
+    mlRecommendations: mlRecommendations.slice(0, 3)
   }
 }
 
@@ -36,7 +43,19 @@ const parseIntent = (query) => {
   return 'general'
 }
 
-const generateResponse = (intent, query, userProfile) => {
+const extractContext = (query, intent) => {
+  const context = { occasion: 'casual', weather: 'mild' }
+  
+  if (query.includes('work') || query.includes('office')) context.occasion = 'work'
+  if (query.includes('date') || query.includes('romantic')) context.occasion = 'date'
+  if (query.includes('party') || query.includes('event')) context.occasion = 'formal'
+  if (query.includes('cold') || query.includes('winter')) context.weather = 'cold'
+  if (query.includes('hot') || query.includes('summer')) context.weather = 'hot'
+  
+  return context
+}
+
+const generateResponse = (intent, query, userProfile, mlRecommendations = []) => {
   const responses = {
     occasion: generateOccasionAdvice(query, userProfile),
     color: generateColorAdvice(userProfile),
@@ -51,7 +70,7 @@ const generateResponse = (intent, query, userProfile) => {
   return responses[intent] || responses.general
 }
 
-const generateOccasionAdvice = (query, userProfile) => {
+const generateOccasionAdvice = (query, userProfile, mlRecommendations = []) => {
   const occasions = {
     'work': 'Professional blazer with tailored pants',
     'date': 'Something that makes you feel confident and beautiful',
@@ -63,10 +82,14 @@ const generateOccasionAdvice = (query, userProfile) => {
   const occasion = Object.keys(occasions).find(occ => query.includes(occ))
   const baseAdvice = occasions[occasion] || 'Choose something that reflects your personal style'
   
+  const mlSuggestions = mlRecommendations.length > 0 
+    ? mlRecommendations.map(rec => rec.name)
+    : getPersonalizedSuggestions(userProfile, occasion)
+  
   return {
     message: `For this occasion, I recommend: ${baseAdvice}. Based on your ${userProfile.bodyShape?.type} shape and ${userProfile.personality} style, here's what would work perfectly:`,
-    suggestions: getPersonalizedSuggestions(userProfile, occasion),
-    confidence: 0.85,
+    suggestions: mlSuggestions,
+    confidence: mlRecommendations.length > 0 ? mlRecommendations[0]?.confidence || 0.85 : 0.85,
     followUp: "Would you like specific color recommendations for this outfit?"
   }
 }

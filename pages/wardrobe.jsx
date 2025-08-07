@@ -66,19 +66,37 @@ export default function Wardrobe() {
               <div className="grid md:grid-cols-3 gap-4">
                 {outfitPreview.top && (
                   <div className="text-center">
-                    <img src={outfitPreview.top.src} className="w-full h-32 object-cover rounded-lg mb-2" />
+                    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                      <img 
+                        src={outfitPreview.top.src} 
+                        className="w-full h-auto max-h-32 object-contain rounded-lg"
+                        style={{ aspectRatio: 'auto' }}
+                      />
+                    </div>
                     <p className="font-medium">Top</p>
                   </div>
                 )}
                 {outfitPreview.bottom && (
                   <div className="text-center">
-                    <img src={outfitPreview.bottom.src} className="w-full h-32 object-cover rounded-lg mb-2" />
+                    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                      <img 
+                        src={outfitPreview.bottom.src} 
+                        className="w-full h-auto max-h-32 object-contain rounded-lg"
+                        style={{ aspectRatio: 'auto' }}
+                      />
+                    </div>
                     <p className="font-medium">Bottom</p>
                   </div>
                 )}
                 {outfitPreview.accessory && (
                   <div className="text-center">
-                    <img src={outfitPreview.accessory.src} className="w-full h-32 object-cover rounded-lg mb-2" />
+                    <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                      <img 
+                        src={outfitPreview.accessory.src} 
+                        className="w-full h-auto max-h-32 object-contain rounded-lg"
+                        style={{ aspectRatio: 'auto' }}
+                      />
+                    </div>
                     <p className="font-medium">Accessory</p>
                   </div>
                 )}
@@ -110,11 +128,14 @@ export default function Wardrobe() {
                   }`}
                   onClick={() => handleItemSelect(item)}
                 >
-                  <img 
-                    src={item.src} 
-                    alt={item.name}
-                    className="w-full h-32 object-cover rounded-lg mb-2"
-                  />
+                  <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                    <img 
+                      src={item.src} 
+                      alt={item.name}
+                      className="w-full h-auto max-h-32 object-contain rounded-lg"
+                      style={{ aspectRatio: 'auto' }}
+                    />
+                  </div>
                   <p className="text-sm font-medium truncate">{item.name}</p>
                   <p className="text-xs text-gray-500 capitalize">{item.category}</p>
                   <div className="mt-2 flex justify-between">

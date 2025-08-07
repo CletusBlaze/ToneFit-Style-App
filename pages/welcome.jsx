@@ -17,8 +17,11 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 flex items-center justify-center px-4 relative">
+      <div className="absolute inset-0 opacity-20">
+        <img src="/main.jpg" alt="Fashion Background" className="w-full h-full object-cover" />
+      </div>
+      <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-2xl">

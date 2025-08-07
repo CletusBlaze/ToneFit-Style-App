@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../src/components/Navbar'
 import { useStore } from '../src/store/useStore'
+import { getChallengeLeaderboard, updateChallengeScore } from '../src/utils/leaderboards'
 
 const challengeTemplates = [
   {
@@ -60,8 +61,10 @@ const challengeTemplates = [
 ]
 
 export default function StyleChallenges() {
-  const { user, activeChallenges = [], startChallenge, updateChallenge, completeChallenge } = useStore()
+  const { user, activeChallenges = [], startChallenge, updateChallenge, completeChallenge, auth } = useStore()
   const [showCustomForm, setShowCustomForm] = useState(false)
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState(null)
+  const [leaderboardData, setLeaderboardData] = useState([])
   const [customChallenge, setCustomChallenge] = useState({
     title: '',
     description: '',
@@ -101,6 +104,18 @@ export default function StyleChallenges() {
   const logProgress = (challengeId, day, success, notes) => {
     const log = { day, success, notes, date: new Date().toISOString() }
     updateChallenge(challengeId, log)
+    
+    // Update leaderboard score
+    if (auth.user && success) {
+      const score = day * 10 // 10 points per completed day
+      updateChallengeScore(challengeId, auth.user.id, score, day)
+    }
+  }
+
+  const viewLeaderboard = (challengeId) => {
+    const leaderboard = getChallengeLeaderboard(challengeId)
+    setLeaderboardData(leaderboard)
+    setSelectedLeaderboard(challengeId)
   }
 
   const getDaysRemaining = (challenge) => {
@@ -166,8 +181,11 @@ export default function StyleChallenges() {
                       >
                         ✅ Completed Today
                       </button>
-                      <button className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-all">
-                        📝 Add Notes
+                      <button 
+                        onClick={() => viewLeaderboard(challenge.id)}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+                      >
+                        🏆 Leaderboard
                       </button>
                     </div>
                   </div>
@@ -221,6 +239,44 @@ export default function StyleChallenges() {
               ))}
             </div>
           </div>
+
+          {/* Leaderboard Modal */}
+          {selectedLeaderboard && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">Challenge Leaderboard</h2>
+                  <button 
+                    onClick={() => setSelectedLeaderboard(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {leaderboardData.map((participant, index) => (
+                    <div key={participant.userId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${participant.rank}`}
+                        </span>
+                        <div>
+                          <p className="font-semibold">User {participant.userId}</p>
+                          <p className="text-sm text-gray-500">{participant.completedDays} days completed</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-purple-600">{participant.score} pts</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {leaderboardData.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">No participants yet</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Custom Challenge Modal */}
           {showCustomForm && (

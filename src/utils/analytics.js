@@ -1,22 +1,37 @@
 // Analytics and metrics tracking
 export const trackEvent = (eventName, properties = {}) => {
-  // Simulate analytics tracking
   const event = {
     name: eventName,
     properties: {
       ...properties,
       timestamp: new Date().toISOString(),
       sessionId: getSessionId(),
-      userId: getUserId()
+      userId: getUserId(),
+      userAgent: navigator.userAgent,
+      screenSize: `${window.screen.width}x${window.screen.height}`,
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+      page: window.location.pathname
     }
   }
   
-  // Store in localStorage for demo
   const events = JSON.parse(localStorage.getItem('analytics_events') || '[]')
   events.push(event)
-  localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100))) // Keep last 100 events
+  localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100)))
   
+  updateUserBehavior(eventName, properties)
   console.log('Analytics Event:', event)
+}
+
+const updateUserBehavior = (eventName, properties) => {
+  const behavior = JSON.parse(localStorage.getItem('user_behavior') || '{}')
+  
+  if (!behavior.featureUsage) behavior.featureUsage = {}
+  behavior.featureUsage[eventName] = (behavior.featureUsage[eventName] || 0) + 1
+  
+  if (properties.bodyShape) behavior.bodyShape = properties.bodyShape
+  if (properties.skinTone) behavior.skinTone = properties.skinTone
+  
+  localStorage.setItem('user_behavior', JSON.stringify(behavior))
 }
 
 export const trackPageView = (pageName) => {
@@ -42,6 +57,25 @@ export const trackAIInteraction = (feature, confidence, success) => {
   })
 }
 
+export const getAdvancedAnalytics = () => {
+  const events = JSON.parse(localStorage.getItem('analytics_events') || '[]')
+  const userBehavior = JSON.parse(localStorage.getItem('user_behavior') || '{}')
+  
+  return {
+    totalEvents: events.length,
+    pageViews: events.filter(e => e.name === 'page_view').length,
+    userActions: events.filter(e => e.name === 'user_action').length,
+    aiInteractions: events.filter(e => e.name === 'ai_interaction').length,
+    recentEvents: events.slice(-10),
+    topPages: getTopPages(events),
+    userEngagement: calculateEngagement(events),
+    userBehavior: userBehavior,
+    conversionFunnel: getConversionFunnel(events),
+    retentionRate: getRetentionRate(events),
+    featureAdoption: getFeatureAdoption(events)
+  }
+}
+
 export const getAnalytics = () => {
   const events = JSON.parse(localStorage.getItem('analytics_events') || '[]')
   
@@ -54,6 +88,40 @@ export const getAnalytics = () => {
     topPages: getTopPages(events),
     userEngagement: calculateEngagement(events)
   }
+}
+
+const getConversionFunnel = (events) => {
+  const steps = ['page_view', 'profile_start', 'profile_complete', 'first_outfit']
+  const funnel = {}
+  
+  steps.forEach(step => {
+    funnel[step] = events.filter(e => e.name === step).length
+  })
+  
+  return funnel
+}
+
+const getRetentionRate = (events) => {
+  const uniqueDays = new Set(
+    events.map(e => new Date(e.properties.timestamp).toDateString())
+  )
+  return uniqueDays.size
+}
+
+const getFeatureAdoption = (events) => {
+  const features = ['ai_stylist', 'outfit_builder', 'style_journal', 'community']
+  const adoption = {}
+  
+  features.forEach(feature => {
+    const users = new Set(
+      events
+        .filter(e => e.name.includes(feature))
+        .map(e => e.properties.userId)
+    )
+    adoption[feature] = users.size
+  })
+  
+  return adoption
 }
 
 const getSessionId = () => {

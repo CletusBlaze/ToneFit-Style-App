@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../src/components/Navbar'
 import { useStore } from '../src/store/useStore'
+import { analyzeOutfitRating } from '../src/utils/outfitRating'
 
 export default function RateLook() {
   const { user } = useStore()
@@ -22,31 +23,30 @@ export default function RateLook() {
   const analyzeOutfit = async () => {
     setAnalyzing(true)
     
-    // Simulate AI analysis
-    setTimeout(() => {
-      const rating = {
-        overall: Math.floor(Math.random() * 30) + 70, // 70-100
-        color: Math.floor(Math.random() * 30) + 70,
-        fit: Math.floor(Math.random() * 30) + 70,
-        style: Math.floor(Math.random() * 30) + 70,
-        occasion: Math.floor(Math.random() * 30) + 70,
-        feedback: [
-          'Great color coordination!',
-          'The fit complements your body shape well',
-          'Consider adding a statement accessory',
-          'Perfect for the occasion you described'
-        ],
-        improvements: [
-          'Try tucking in the top for a more polished look',
-          'A belt would help define your waist',
-          'Consider switching to nude shoes for versatility'
-        ],
-        confidence: Math.random() * 0.2 + 0.8 // 80-100%
+    try {
+      const img = new Image()
+      img.onload = async () => {
+        const analysis = await analyzeOutfitRating(img, user)
+        
+        const rating = {
+          overall: analysis.overall,
+          color: analysis.breakdown.colorHarmony,
+          fit: analysis.breakdown.composition,
+          style: analysis.breakdown.styleCoherence,
+          occasion: analysis.breakdown.occasionMatch,
+          feedback: analysis.feedback,
+          improvements: analysis.improvements,
+          confidence: analysis.confidence
+        }
+        
+        setAiRating(rating)
+        setAnalyzing(false)
       }
-      
-      setAiRating(rating)
+      img.src = outfitPhoto
+    } catch (error) {
+      console.error('Analysis failed:', error)
       setAnalyzing(false)
-    }, 3000)
+    }
   }
 
   const getRatingColor = (score) => {
